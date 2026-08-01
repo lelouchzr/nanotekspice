@@ -1,0 +1,5 @@
+*.pdf binary
+*.png binary
+*.gz binary
+# Preserve the supplied reference circuits byte-for-byte, including their original spacing.
+tests/fixtures/original/** -text -whitespace
