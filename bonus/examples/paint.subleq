@@ -1,0 +1,15 @@
+# Draw every pixel of the 64x64 RGB332 matrix through the CPU's 20-bit output bus.
+# b=-2: write color=memory[a], address=memory[c]; both values come from this program.
+.entry pixel
+pixel: subleq color -2 address
+inc_color: subleq minus_one color inc_address
+inc_address: subleq minus_one address decrement
+decrement: subleq one remaining stop
+jump: subleq zero zero pixel
+stop: .halt
+color: .word 0
+address: .word 0
+remaining: .word 4096
+minus_one: .word -1
+one: .word 1
+zero: .word 0

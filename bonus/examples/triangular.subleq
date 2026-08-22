@@ -1,0 +1,14 @@
+# Sum 10+9+...+1 using subtraction, scratch memory and conditional branches.
+.entry add
+add: subleq counter scratch next
+next: subleq scratch sum clear
+clear: subleq scratch scratch decrement
+decrement: subleq one counter done
+jump: subleq zero zero add
+done: subleq sum -1 0
+stop: .halt
+counter: .word 10
+sum: .word 0
+scratch: .word 0
+one: .word 1
+zero: .word 0

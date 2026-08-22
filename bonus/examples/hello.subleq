@@ -1,0 +1,13 @@
+# The serial transcript is visible in the CPU inspector. No unsolicited stdout.
+subleq h -1 0
+subleq e -1 0
+subleq l -1 0
+subleq l -1 0
+subleq o -1 0
+subleq newline -1 0
+.halt
+h: .word 72
+e: .word 101
+l: .word 108
+o: .word 111
+newline: .word 10

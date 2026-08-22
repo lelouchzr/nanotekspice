@@ -1,0 +1,5 @@
+# Wait for one byte on the input bus/strobe, echo it, then halt.
+subleq -1 value 0
+subleq value -1 0
+.halt
+value: .word 0

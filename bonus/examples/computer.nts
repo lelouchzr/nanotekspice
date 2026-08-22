@@ -1,0 +1,46 @@
+# Load a program with --program cpu bonus/examples/triangular.subleq ; --set clk=0
+.chipsets:
+clock clk
+false low
+true high
+subleq cpu
+7seg digit
+matrix screen
+output halted
+.links:
+clk:1 cpu:1
+low:1 cpu:2
+high:1 cpu:3
+cpu:24 halted:1
+cpu:4 digit:1
+cpu:5 digit:2
+cpu:6 digit:3
+cpu:7 digit:4
+cpu:4 screen:1
+cpu:5 screen:2
+cpu:6 screen:3
+cpu:7 screen:4
+cpu:8 screen:5
+cpu:9 screen:6
+cpu:10 screen:7
+cpu:11 screen:8
+cpu:12 screen:9
+cpu:13 screen:10
+cpu:14 screen:11
+cpu:15 screen:12
+cpu:16 screen:13
+cpu:17 screen:14
+cpu:18 screen:15
+cpu:19 screen:16
+cpu:20 screen:17
+cpu:21 screen:18
+cpu:22 screen:19
+cpu:23 screen:20
+.graphic:
+clk 25 40
+low 25 180
+high 25 320
+cpu 350 80
+digit 680 70
+screen 680 340
+halted 350 310

@@ -1,0 +1,65 @@
+.chipsets:
+input c0
+input c1
+input c2
+input c3
+input c4
+input c5
+input c6
+input c7
+input a0
+input a1
+input a2
+input a3
+input a4
+input a5
+input a6
+input a7
+input a8
+input a9
+input a10
+input a11
+matrix screen
+.links:
+c0:1 screen:1
+c1:1 screen:2
+c2:1 screen:3
+c3:1 screen:4
+c4:1 screen:5
+c5:1 screen:6
+c6:1 screen:7
+c7:1 screen:8
+a0:1 screen:9
+a1:1 screen:10
+a2:1 screen:11
+a3:1 screen:12
+a4:1 screen:13
+a5:1 screen:14
+a6:1 screen:15
+a7:1 screen:16
+a8:1 screen:17
+a9:1 screen:18
+a10:1 screen:19
+a11:1 screen:20
+.graphic:
+screen 650 150
+c0 20 30
+c1 300 30
+c2 20 155
+c3 300 155
+c4 20 280
+c5 300 280
+c6 20 405
+c7 300 405
+a0 1000 30
+a1 1280 30
+a2 1000 155
+a3 1280 155
+a4 1000 280
+a5 1280 280
+a6 1000 405
+a7 1280 405
+a8 1000 530
+a9 1280 530
+a10 1000 655
+a11 1280 655

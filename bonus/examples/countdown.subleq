@@ -1,0 +1,9 @@
+# Output 5,4,3,2,1 to the parallel byte bus, then halt.
+.entry loop
+loop: subleq value -1 0
+      subleq one value stop
+      subleq zero zero loop
+stop: .halt
+value: .word 5
+one: .word 1
+zero: .word 0
