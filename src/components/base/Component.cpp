@@ -16,6 +16,7 @@ std::size_t checkedCount(std::size_t pins) {
 
 std::atomic<std::uint64_t> Component::epoch_{1};
 thread_local std::size_t Component::depth_ = 0;
+thread_local std::uint64_t Component::cycleVersion_ = 0;
 
 Component::Component(std::string type, std::size_t pins)
     : type_(std::move(type)), pins_(checkedCount(pins)) {}

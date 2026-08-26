@@ -28,6 +28,13 @@ void computerTests(const std::filesystem::path &examples) {
     require(screen->pixels[0] == 0 && screen->pixels[255] == 0xffffffU &&
                 screen->pixels[4095] == 0xffffffU,
             "little computer framebuffer output values are incorrect");
+    for (std::size_t address = 0; address < 4096; ++address) {
+        const auto shade = static_cast<unsigned>(address % 256);
+        const auto expected = (((shade >> 5U) * 255U / 7U) << 16U) |
+                              ((((shade >> 2U) & 7U) * 255U / 7U) << 8U) | ((shade & 3U) * 85U);
+        require(screen->known[address] && screen->pixels[address] == expected,
+                "CPU-to-matrix framebuffer differs from the independent RGB332 pixel oracle");
+    }
     auto keyboard = Parser::load(examples / "keyboard.nts");
     keyboard.component("cpu").loadProgram(examples / "echo.subleq");
     keyboard.setInput("clk", False);

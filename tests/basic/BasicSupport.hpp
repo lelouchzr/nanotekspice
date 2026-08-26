@@ -64,6 +64,7 @@ void basicTruthTests();
 void sourceTests();
 void connectionTests();
 void phaseAndGuardTests();
+void feedbackOracleTests();
 void factoryTests();
 
 } // namespace nts::test

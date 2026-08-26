@@ -10,15 +10,21 @@ Drive Component::drive(std::size_t pin) {
     refresh();
     if (target.cached)
         return *target.cached;
-    if (target.evaluating)
+    if (target.evaluating) {
+        ++cycleVersion_;
         return Drive::Unknown;
+    }
     if (depth_ >= 512)
         throw ComponentError("evaluation exceeds the safety limit of 512 recursive components");
+    const auto cycleBefore = cycleVersion_;
     target.evaluating = true;
     ++depth_;
     try {
         const auto value = evaluate(pin);
-        target.cached = value;
+        // A cycle break is provisional. Another branch can still establish a known
+        // controlling value in this phase, so never memoize its propagated unknown.
+        if (value != Drive::Unknown || cycleBefore == cycleVersion_)
+            target.cached = value;
         target.evaluating = false;
         --depth_;
         return value;

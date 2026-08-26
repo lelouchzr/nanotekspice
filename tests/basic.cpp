@@ -9,6 +9,7 @@ int main() {
         nts::test::sourceTests();
         nts::test::connectionTests();
         nts::test::phaseAndGuardTests();
+        nts::test::feedbackOracleTests();
         std::cout << nts::test::checks << " basic component checks passed\n";
         return 0;
     } catch (const std::exception &error) {

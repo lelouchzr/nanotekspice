@@ -109,12 +109,21 @@ if(BUILD_TESTING)
         file(GLOB bonus_test_sources CONFIGURE_DEPENDS "bonus/tests/*.cpp")
         add_executable(test_bonus ${bonus_test_sources})
         target_link_libraries(test_bonus PRIVATE nts_core)
+        add_executable(nts_oracle_probe bonus/tests/oracle/Probe.cpp)
+        target_link_libraries(nts_oracle_probe PRIVATE nts_core)
+        add_test(NAME bonus_oracle COMMAND ${Python3_EXECUTABLE}
+            "${PROJECT_SOURCE_DIR}/bonus/tests/oracle/differential.py" $<TARGET_FILE:nts_oracle_probe>)
+        set_tests_properties(bonus_oracle PROPERTIES TIMEOUT 45)
         add_test(NAME bonus COMMAND test_bonus)
         set_tests_properties(bonus PROPERTIES TIMEOUT 90)
     endif()
     if(NTS_BONUS AND NTS_BUILD_GRAPHICS AND NOT APPLE)
         find_program(XVFB_RUN_EXECUTABLE xvfb-run)
         if(XVFB_RUN_EXECUTABLE)
+            add_executable(test_gui_interactions bonus/tests/gui/Interactions.cpp)
+            target_link_libraries(test_gui_interactions PRIVATE nts_core)
+            add_test(NAME gui_interactions COMMAND ${XVFB_RUN_EXECUTABLE} -a $<TARGET_FILE:test_gui_interactions>)
+            set_tests_properties(gui_interactions PROPERTIES TIMEOUT 30)
             add_test(NAME gui_lifecycle COMMAND ${CMAKE_COMMAND} -E env NTS_GUI_SMOKE_FRAMES=3
                 ${XVFB_RUN_EXECUTABLE} -a $<TARGET_FILE:nanotekspice>
                 --program cpu "${PROJECT_SOURCE_DIR}/bonus/examples/paint.subleq"
