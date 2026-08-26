@@ -2,6 +2,7 @@
 #include "GraphGui.hpp"
 #include "nts/Parser.hpp"
 #include <SDL.h>
+#include <cstdlib>
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
@@ -102,8 +103,49 @@ int main() {
         };
         runGui(callbacks);
         require(frame >= 9 && circuit.tick() == 37, "GUI scenario did not complete");
+        require(SDL_WasInit(0) == 0, "standalone GUI retained the SDL runtime");
+        GraphCallbacks shortRun = real;
+        shortRun.captureGraph = [&] {
+            require(SDL_SetHint("NTS_GUI_MEMORY_MARKER", "allocated") == SDL_TRUE,
+                    "cannot set owned SDL state");
+            SDL_Event quit{};
+            quit.type = SDL_QUIT;
+            require(SDL_PushEvent(&quit) == 1, "cannot queue GUI shutdown");
+            return real.captureGraph();
+        };
+        for (int repeat = 0; repeat < 4; ++repeat) {
+            runGui(shortRun);
+            require(SDL_WasInit(0) == 0, "repeated GUI retained SDL global state");
+            require(SDL_GetHint("NTS_GUI_MEMORY_MARKER") == nullptr,
+                    "standalone GUI retained its SDL hint allocation");
+        }
+        require(SDL_InitSubSystem(SDL_INIT_TIMER) == 0, "cannot initialize caller's SDL timer");
+        runGui(shortRun);
+        require((SDL_WasInit(0) & SDL_INIT_TIMER) != 0, "GUI destroyed caller-owned SDL state");
+        require((SDL_WasInit(0) & SDL_INIT_VIDEO) == 0,
+                "GUI retained its borrowed video subsystem");
+        require(SDL_GetHint("NTS_GUI_MEMORY_MARKER") != nullptr,
+                "GUI destroyed caller-owned global SDL allocations");
+        SDL_Quit();
+        const char *driver = std::getenv("SDL_VIDEODRIVER");
+        const bool hadDriver = driver != nullptr;
+        const std::string previousDriver = driver ? driver : "";
+        require(SDL_setenv("SDL_VIDEODRIVER", "epitech-invalid-driver", 1) == 0,
+                "cannot configure failed video initialization");
+        bool rejected = false;
+        try {
+            runGui(shortRun);
+        } catch (const std::runtime_error &) {
+            rejected = true;
+        }
+        if (hadDriver)
+            SDL_setenv("SDL_VIDEODRIVER", previousDriver.c_str(), 1);
+        else
+            unsetenv("SDL_VIDEODRIVER");
+        require(rejected && SDL_WasInit(0) == 0, "failed GUI initialization retained SDL state");
         std::cout << "Native SDL events: selection, deferred 0/1/U, Step, Run x32, Pause, zoom, "
-                     "Reset View and exit passed against real circuit output\n";
+                     "Reset View, repeated lifecycle and SDL ownership passed against real circuit "
+                     "output\n";
         return 0;
     } catch (const std::exception &error) {
         std::cerr << error.what() << '\n';

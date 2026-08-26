@@ -67,7 +67,7 @@ for memory, entry, budget, inputs in cases:
     lines.append(' '.join(map(str, inputs)))
     lines.append(' '.join(map(str, watches)))
     expected.append((reference(memory, entry, budget, inputs), watches))
-result = subprocess.run([sys.argv[1]], input='\n'.join(lines)+'\n', text=True,
+result = subprocess.run(sys.argv[1:], input='\n'.join(lines)+'\n', text=True,
                         capture_output=True, timeout=30)
 assert result.returncode == 0, result.stderr
 actual = iter(result.stdout.splitlines())

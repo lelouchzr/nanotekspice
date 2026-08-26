@@ -22,6 +22,8 @@ class Gui {
     GraphModel graph_;
     SDL_Window *window_ = nullptr;
     SDL_Renderer *renderer_ = nullptr;
+    bool ownsSdl_ = false;
+    bool videoReady_ = false;
     bool running_ = true;
     bool playing_ = false;
     bool dragging_ = false;
@@ -32,6 +34,7 @@ class Gui {
     double panX_ = 0, panY_ = 0;
     unsigned smokeFrames_ = 0;
     std::optional<std::string> selected_;
+    void shutdown() noexcept;
     void poll();
     void render();
     void click(int x, int y);

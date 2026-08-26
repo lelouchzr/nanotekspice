@@ -24,8 +24,13 @@ Gui::Gui(GraphCallbacks callbacks) : callbacks_(std::move(callbacks)) {
             smokeFrames_ == 0 || smokeFrames_ > 1000)
             throw std::invalid_argument("NTS_GUI_SMOKE_FRAMES expects 1..1000");
     }
-    if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0)
-        throw std::runtime_error(std::string("SDL video initialization: ") + SDL_GetError());
+    ownsSdl_ = SDL_WasInit(0) == 0;
+    if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
+        const std::string error = SDL_GetError();
+        shutdown();
+        throw std::runtime_error("SDL video initialization: " + error);
+    }
+    videoReady_ = true;
     window_ = SDL_CreateWindow("NanoTekSpice / live circuit", SDL_WINDOWPOS_CENTERED,
                                SDL_WINDOWPOS_CENTERED, width_, height_, SDL_WINDOW_RESIZABLE);
     if (window_)
@@ -37,17 +42,29 @@ Gui::Gui(GraphCallbacks callbacks) : callbacks_(std::move(callbacks)) {
         renderer_ = SDL_CreateRenderer(window_, -1, SDL_RENDERER_SOFTWARE);
     if (!window_ || !renderer_) {
         const std::string error = SDL_GetError();
-        if (window_)
-            SDL_DestroyWindow(window_);
-        SDL_QuitSubSystem(SDL_INIT_VIDEO);
+        shutdown();
         throw std::runtime_error("SDL window/renderer: " + error);
     }
 }
 
 Gui::~Gui() {
-    SDL_DestroyRenderer(renderer_);
-    SDL_DestroyWindow(window_);
-    SDL_QuitSubSystem(SDL_INIT_VIDEO);
+    shutdown();
+}
+
+void Gui::shutdown() noexcept {
+    if (renderer_)
+        SDL_DestroyRenderer(renderer_);
+    if (window_)
+        SDL_DestroyWindow(window_);
+    renderer_ = nullptr;
+    window_ = nullptr;
+    if (videoReady_)
+        SDL_QuitSubSystem(SDL_INIT_VIDEO);
+    videoReady_ = false;
+    // Subsystem shutdown leaves SDL's global caches alive; release them when we own SDL.
+    if (ownsSdl_)
+        SDL_Quit();
+    ownsSdl_ = false;
 }
 
 int Gui::screenX(double x) const {

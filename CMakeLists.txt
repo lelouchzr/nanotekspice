@@ -131,6 +131,53 @@ if(BUILD_TESTING)
             set_tests_properties(gui_lifecycle PROPERTIES TIMEOUT 60 WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
         endif()
     endif()
+    if(NOT NTS_SANITIZERS)
+        find_program(VALGRIND_EXECUTABLE valgrind)
+        if(VALGRIND_EXECUTABLE)
+            foreach(suite basic advanced parser)
+                add_test(NAME memory_${suite} COMMAND ${Python3_EXECUTABLE}
+                    "${PROJECT_SOURCE_DIR}/tools/memory_check.py" --valgrind "${VALGRIND_EXECUTABLE}"
+                    --log "${CMAKE_BINARY_DIR}/memcheck/${suite}" -- $<TARGET_FILE:test_${suite}>)
+                set_tests_properties(memory_${suite} PROPERTIES TIMEOUT 300)
+            endforeach()
+            add_test(NAME memory_cli_error COMMAND ${Python3_EXECUTABLE}
+                "${PROJECT_SOURCE_DIR}/tools/memory_check.py" --valgrind "${VALGRIND_EXECUTABLE}"
+                --log "${CMAKE_BINARY_DIR}/memcheck/cli_error" --expect-exit 84
+                -- $<TARGET_FILE:nanotekspice> "${CMAKE_BINARY_DIR}/memcheck/missing-input.nts")
+            set_tests_properties(memory_cli_error PROPERTIES TIMEOUT 300)
+            if(NTS_BONUS)
+                add_test(NAME memory_computer_cli COMMAND ${Python3_EXECUTABLE}
+                    "${PROJECT_SOURCE_DIR}/tools/memory_check.py" --valgrind "${VALGRIND_EXECUTABLE}"
+                    --log "${CMAKE_BINARY_DIR}/memcheck/computer_cli" -- $<TARGET_FILE:nanotekspice>
+                    --program cpu "${PROJECT_SOURCE_DIR}/bonus/examples/triangular.subleq"
+                    --set clk=0 --ticks 150 --export-svg "${CMAKE_BINARY_DIR}/memcheck/computer.svg"
+                    "${PROJECT_SOURCE_DIR}/bonus/examples/computer.nts")
+                set_tests_properties(memory_computer_cli PROPERTIES TIMEOUT 300)
+                add_test(NAME memory_bonus COMMAND ${Python3_EXECUTABLE}
+                    "${PROJECT_SOURCE_DIR}/tools/memory_check.py" --valgrind "${VALGRIND_EXECUTABLE}"
+                    --log "${CMAKE_BINARY_DIR}/memcheck/bonus" -- $<TARGET_FILE:test_bonus>
+                    "${PROJECT_SOURCE_DIR}")
+                set_tests_properties(memory_bonus PROPERTIES TIMEOUT 300)
+                add_test(NAME memory_cpu_oracle COMMAND ${Python3_EXECUTABLE}
+                    "${PROJECT_SOURCE_DIR}/bonus/tests/oracle/differential.py" "${VALGRIND_EXECUTABLE}"
+                    --leak-check=full --show-leak-kinds=all --errors-for-leak-kinds=all
+                    --default-suppressions=no --error-exitcode=99
+                    "--log-file=${CMAKE_BINARY_DIR}/memcheck/cpu-oracle.log"
+                    $<TARGET_FILE:nts_oracle_probe>)
+                set_tests_properties(memory_cpu_oracle PROPERTIES TIMEOUT 300)
+                if(TARGET test_gui_interactions)
+                    add_test(NAME memory_gui COMMAND ${CMAKE_COMMAND} -E env
+                        GALLIUM_DRIVER=softpipe SDL_RENDER_DRIVER=software SDL_FRAMEBUFFER_ACCELERATION=0
+                        DBUS_SESSION_BUS_ADDRESS=unix:path=/tmp/epitech-memory-no-session-bus
+                        ${XVFB_RUN_EXECUTABLE} -a ${Python3_EXECUTABLE}
+                        "${PROJECT_SOURCE_DIR}/tools/memory_check.py" --valgrind "${VALGRIND_EXECUTABLE}"
+                        --allow-reachable --log "${CMAKE_BINARY_DIR}/memcheck/gui"
+                        -- $<TARGET_FILE:test_gui_interactions>)
+                    set_tests_properties(memory_gui PROPERTIES TIMEOUT 300)
+                endif()
+            endif()
+        endif()
+    endif()
     file(GLOB_RECURSE headers CONFIGURE_DEPENDS "include/*.hpp" "src/*.hpp" "tests/*.hpp")
     if(NTS_BONUS)
         file(GLOB_RECURSE bonus_headers CONFIGURE_DEPENDS "bonus/*.hpp")
