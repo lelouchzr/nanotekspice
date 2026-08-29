@@ -1,0 +1,16 @@
+# One-bit half adder: sum = a XOR b; carry = a AND b.
+.chipsets:
+input a
+input b
+xor sum_gate
+and carry_gate
+output sum
+output carry
+
+.links:
+a:1 sum_gate:1
+b:1 sum_gate:2
+a:1 carry_gate:1
+b:1 carry_gate:2
+sum_gate:3 sum:1
+carry_gate:3 carry:1
