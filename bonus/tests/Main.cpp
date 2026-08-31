@@ -12,6 +12,7 @@ int main(int argc, char **argv) {
         nts::bonus::test::displayTests();
         nts::bonus::test::graphTests(examples);
         nts::bonus::test::computerTests(examples);
+        nts::bonus::test::viewportTests();
         std::cout << nts::bonus::test::checks << " bonus checks passed\n";
         return 0;
     } catch (const std::exception &error) {

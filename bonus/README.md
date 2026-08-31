@@ -27,13 +27,18 @@ All five bonuses live in `bonus/`, enabled by `NTS_BONUS=ON`. The native window 
 |---|---|
 | Enter/F10 / Step button | One real circuit tick |
 | Space / Run button | Run batches of 32 ticks; repeat to pause |
-| Wheel | Bounded zoom |
+| Wheel / trackpad | Smooth zoom at the pointer, 10–400%; toolbar/inspector scrolling leaves the circuit unchanged |
+| `+` / `=` / keypad `+`, `-` / keypad `-` | Zoom in/out at the canvas center |
+| Ctrl+0 / Cmd+0 | Reset to 100% and the original position |
+| Home | Fit the complete circuit within the zoom limits |
 | Drag background | Pan graph |
 | Click component | Inspect pins/display |
 | Click input/clock | Select 0/1/U; applied on next simulation |
 | 0, 1, U with input selected | Queue assignment, same deferred behavior as shell |
-| Reset view | Restore framing |
+| Reset view | Restore 100% zoom and the original position |
 | Escape / close window | Clean shutdown |
+
+The toolbar shows shortcuts and the current zoom percentage. Labels scale with the circuit; tiny labels are hidden below 50% to keep the overview clear. Resizing preserves the point at the canvas center.
 
 The GUI controls the actual `Circuit`. SVG/HTML are **snapshots**, without a JavaScript simulator. Optional `.graphic:` entries use `name x y`; integer coordinates ±1,000,000, existing component names. Otherwise automatic grid placement.
 

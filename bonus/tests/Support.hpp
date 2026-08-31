@@ -19,5 +19,6 @@ void cpuTests(const std::filesystem::path &examples);
 void displayTests();
 void graphTests(const std::filesystem::path &examples);
 void computerTests(const std::filesystem::path &examples);
+void viewportTests();
 
 } // namespace nts::bonus::test

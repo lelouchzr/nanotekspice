@@ -2,10 +2,10 @@
 #include "Gui.hpp"
 #include "../GraphGui.hpp"
 #include "Export.hpp"
-#include "Glyphs.hpp"
 #include <SDL.h>
 #include <algorithm>
 #include <charconv>
+#include <cmath>
 #include <cstdlib>
 #include <memory>
 #include <stdexcept>
@@ -31,6 +31,7 @@ Gui::Gui(GraphCallbacks callbacks) : callbacks_(std::move(callbacks)) {
         throw std::runtime_error("SDL video initialization: " + error);
     }
     videoReady_ = true;
+    viewport_.resize(width_ - 324, height_ - 84);
     window_ = SDL_CreateWindow("NanoTekSpice / live circuit", SDL_WINDOWPOS_CENTERED,
                                SDL_WINDOWPOS_CENTERED, width_, height_, SDL_WINDOW_RESIZABLE);
     if (window_)
@@ -51,6 +52,10 @@ Gui::~Gui() {
     shutdown();
 }
 
+const Viewport &Gui::view() const noexcept {
+    return viewport_;
+}
+
 void Gui::shutdown() noexcept {
     if (renderer_)
         SDL_DestroyRenderer(renderer_);
@@ -65,39 +70,6 @@ void Gui::shutdown() noexcept {
     if (ownsSdl_)
         SDL_Quit();
     ownsSdl_ = false;
-}
-
-int Gui::screenX(double x) const {
-    return static_cast<int>((x - panX_) * zoom_ + 12);
-}
-
-int Gui::screenY(double y) const {
-    return static_cast<int>((y - panY_) * zoom_ + 72);
-}
-
-void Gui::rectangle(int x, int y, int width, int height, std::uint32_t color) {
-    SDL_SetRenderDrawColor(renderer_, static_cast<Uint8>((color >> 16U) & 255U),
-                           static_cast<Uint8>((color >> 8U) & 255U),
-                           static_cast<Uint8>(color & 255U), 255);
-    const SDL_Rect rectangle{x, y, width, height};
-    SDL_RenderFillRect(renderer_, &rectangle);
-}
-
-void Gui::worldRectangle(double x, double y, double width, double height, std::uint32_t color) {
-    rectangle(screenX(x), screenY(y), std::max(1, static_cast<int>(width * zoom_)),
-              std::max(1, static_cast<int>(height * zoom_)), color);
-}
-
-void Gui::text(int x, int y, std::string_view value, std::uint32_t color, int scale) {
-    for (char character : value) {
-        const auto glyph = Glyphs::rows(character);
-        for (std::size_t row = 0; row < glyph.size(); ++row)
-            for (unsigned column = 0; column < 5; ++column)
-                if (glyph[row] & (1U << (4U - column)))
-                    rectangle(x + static_cast<int>(column) * scale,
-                              y + static_cast<int>(row) * scale, scale, scale, color);
-        x += 6 * scale;
-    }
 }
 
 void Gui::pixels(const DisplayFrame &display, int x, int y) {
@@ -122,104 +94,32 @@ void Gui::pixels(const DisplayFrame &display, int x, int y) {
 void Gui::node(const GraphNode &value) {
     worldRectangle(value.x, value.y, 240, nodeHeight(value), 0x142131);
     worldRectangle(value.x, value.y, 240, 3, selected_ == value.name ? 0xf3a85c : 0x345169);
-    const int font = zoom_ >= 1.6 ? 2 : 1;
-    text(screenX(value.x + 12), screenY(value.y + 12), value.name.substr(0, 28), 0xdce8ef, font);
-    text(screenX(value.x + 12), screenY(value.y + 35), value.type, 0x78d5ad, font);
+    worldText(value.x + 12, value.y + 12, value.name.substr(0, 28), 0xdce8ef);
+    worldText(value.x + 12, value.y + 35, value.type, 0x78d5ad);
     std::string bits;
     for (const auto &pin : value.pins)
         bits += std::string(toString(pin.value));
-    text(screenX(value.x + 12), screenY(value.y + 58), bits.substr(0, 32), 0x86a3be, font);
+    worldText(value.x + 12, value.y + 58, bits.substr(0, 32), 0x86a3be);
     if (value.display) {
         pixels(*value.display, value.x + 14, value.y + 90);
         if (value.display->pixels.empty()) {
             const auto &content = value.display->text;
-            text(screenX(value.x + 12), screenY(value.y + 82), content.substr(0, 28), 0xf3a85c);
+            worldText(value.x + 12, value.y + 82, content.substr(0, 28), 0xf3a85c);
             if (content.size() > 28)
-                text(screenX(value.x + 12), screenY(value.y + 98), content.substr(28, 28),
-                     0x86a3be);
-        }
-    }
-}
-
-void Gui::assign(Tristate value) {
-    if (!selected_)
-        return;
-    const auto node = std::find_if(graph_.nodes.begin(), graph_.nodes.end(),
-                                   [&](const auto &entry) { return entry.name == *selected_; });
-    if (node != graph_.nodes.end() && (node->type == "input" || node->type == "clock"))
-        callbacks_.setInput(node->name, value);
-}
-
-void Gui::click(int x, int y) {
-    if (y < 60) {
-        if (x < 120)
-            callbacks_.step();
-        else if (x < 250)
-            playing_ = !playing_;
-        else if (x < 390) {
-            panX_ = panY_ = 0;
-            zoom_ = 1;
-        }
-        return;
-    }
-    if (x >= width_ - 300)
-        return;
-    for (auto node = graph_.nodes.rbegin(); node != graph_.nodes.rend(); ++node)
-        if (x >= screenX(node->x) && x <= screenX(node->x + 240) && y >= screenY(node->y) &&
-            y <= screenY(node->y + nodeHeight(*node))) {
-            selected_ = node->name;
-            if (node->type == "input" || node->type == "clock") {
-                const auto value = node->pins.empty() ? Undefined : node->pins.front().value;
-                assign(value == Undefined ? False : value == False ? True : Undefined);
-            }
-            return;
-        }
-    selected_.reset();
-    dragging_ = true;
-    lastX_ = x;
-    lastY_ = y;
-}
-
-void Gui::poll() {
-    SDL_Event event;
-    while (SDL_PollEvent(&event)) {
-        if (event.type == SDL_QUIT)
-            running_ = false;
-        if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
-            width_ = std::max(640, event.window.data1);
-            height_ = std::max(480, event.window.data2);
-        }
-        if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT)
-            click(event.button.x, event.button.y);
-        if (event.type == SDL_MOUSEBUTTONUP)
-            dragging_ = false;
-        if (event.type == SDL_MOUSEMOTION && dragging_) {
-            panX_ = std::clamp(panX_ - (event.motion.x - lastX_) / zoom_, -1000000.0, 1000000.0);
-            panY_ = std::clamp(panY_ - (event.motion.y - lastY_) / zoom_, -1000000.0, 1000000.0);
-            lastX_ = event.motion.x;
-            lastY_ = event.motion.y;
-        }
-        if (event.type == SDL_MOUSEWHEEL)
-            zoom_ = std::clamp(zoom_ * (event.wheel.y > 0 ? 1.15 : 1 / 1.15), .1, 4.0);
-        if (event.type == SDL_KEYDOWN) {
-            const auto key = event.key.keysym.sym;
-            if (key == SDLK_ESCAPE)
-                running_ = false;
-            else if (key == SDLK_SPACE)
-                playing_ = !playing_;
-            else if (key == SDLK_F10 || key == SDLK_RETURN)
-                callbacks_.step();
-            else if (key == SDLK_0)
-                assign(False);
-            else if (key == SDLK_1)
-                assign(True);
-            else if (key == SDLK_u)
-                assign(Undefined);
+                worldText(value.x + 12, value.y + 98, content.substr(28, 28), 0x86a3be);
         }
     }
 }
 
 void Gui::render() {
+    int outputWidth = 0, outputHeight = 0;
+    if (SDL_GetRendererOutputSize(renderer_, &outputWidth, &outputHeight) != 0)
+        throw std::runtime_error(std::string("SDL renderer size: ") + SDL_GetError());
+    if (outputWidth <= 0 || outputHeight <= 0)
+        return;
+    if (SDL_RenderSetScale(renderer_, static_cast<float>(outputWidth) / static_cast<float>(width_),
+                           static_cast<float>(outputHeight) / static_cast<float>(height_)) != 0)
+        throw std::runtime_error(std::string("SDL renderer scale: ") + SDL_GetError());
     SDL_SetRenderDrawColor(renderer_, 10, 17, 28, 255);
     SDL_RenderClear(renderer_);
     const SDL_Rect canvas{0, 64, width_ - 300, height_ - 64};
@@ -245,7 +145,10 @@ void Gui::render() {
     text(135, 18, playing_ ? "SPACE PAUSE" : "SPACE RUN X32", 0x78d5ad);
     text(268, 18, "RESET VIEW", 0x86a3be);
     text(420, 18, "TICK " + std::to_string(graph_.tick), 0xf3a85c);
-    text(18, 40, "WHEEL ZOOM / DRAG PAN / CLICK INPUT / 0 1 U EDIT / ESC EXIT", 0x86a3be);
+    text(width_ - 80, 18,
+         std::to_string(static_cast<int>(std::lround(viewport_.scale() * 100))) + "%", 0xf3a85c);
+    text(18, 40, "WHEEL +/- ZOOM / CTRL/CMD+0 RESET / HOME FIT / DRAG PAN / 0 1 U EDIT / ESC EXIT",
+         0x86a3be);
     rectangle(width_ - 300, 62, 300, height_ - 62, 0x101c2a);
     int row = 82;
     text(width_ - 280, row, "COMPONENT INSPECTOR", 0x78d5ad);

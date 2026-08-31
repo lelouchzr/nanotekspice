@@ -81,7 +81,7 @@ The native viewer displays the actual circuit, pin values, and connected devices
   --gui bonus/examples/computer.nts
 ```
 
-Enter: one tick; Space: run/pause; wheel: zoom; drag: pan. Select an input, then press 0/1/U to queue its value. SVG/HTML exports are circuit snapshots.
+Enter: one tick; Space: run/pause; wheel: zoom at the pointer; `+`/`-`: zoom; Ctrl/Cmd+0: reset; Home: fit; drag: pan. Shortcuts and the zoom percentage appear in the toolbar. Select an input, then press 0/1/U to queue its value. SVG/HTML exports are circuit snapshots.
 
 | Example program | Result |
 |---|---|
@@ -119,6 +119,7 @@ Combinational values are evaluated on demand with cycle guards. The circuit owns
 | Build, tests and memory checks | [Testing](doc/testing.md) |
 | Optimization | [Profiling](doc/performance.md) |
 | API | [IComponent contract](include/nts/CONTRACT.md) |
+| Reference-file integrity | [SHA-256 manifest](doc/PROVENANCE.sha256): subject, datasheets and original circuits |
 
 Types live in `include/nts/`, methods in `src/`, and extensions in `bonus/`. Strict compilation with `-Werror`.
 

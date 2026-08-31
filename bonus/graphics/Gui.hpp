@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../GraphModel.hpp"
+#include "Viewport.hpp"
 #include <optional>
 #include <string>
 
@@ -16,6 +17,7 @@ class Gui {
     Gui(const Gui &) = delete;
     Gui &operator=(const Gui &) = delete;
     void run();
+    [[nodiscard]] const Viewport &view() const noexcept;
 
   private:
     GraphCallbacks callbacks_;
@@ -30,8 +32,7 @@ class Gui {
     bool captured_ = false;
     int lastX_ = 0, lastY_ = 0;
     int width_ = 1280, height_ = 820;
-    double zoom_ = 1;
-    double panX_ = 0, panY_ = 0;
+    Viewport viewport_;
     unsigned smokeFrames_ = 0;
     std::optional<std::string> selected_;
     void shutdown() noexcept;
@@ -39,11 +40,16 @@ class Gui {
     void render();
     void click(int x, int y);
     void assign(Tristate value);
+    void fit();
+    void wheel(double steps, int x, int y);
+    void key(int code, unsigned modifiers);
+    [[nodiscard]] bool canvasContains(int x, int y) const;
     void node(const GraphNode &node);
     void pixels(const DisplayFrame &display, int x, int y);
     void text(int x, int y, std::string_view value, std::uint32_t color, int scale = 1);
     void rectangle(int x, int y, int width, int height, std::uint32_t color);
     void worldRectangle(double x, double y, double width, double height, std::uint32_t color);
+    void worldText(double x, double y, std::string_view value, std::uint32_t color);
     [[nodiscard]] int screenX(double x) const;
     [[nodiscard]] int screenY(double y) const;
 };

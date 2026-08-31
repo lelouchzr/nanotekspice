@@ -1,5 +1,6 @@
 #include "CircuitGraph.hpp"
 #include "GraphGui.hpp"
+#include "Zoom.hpp"
 #include "nts/Parser.hpp"
 #include <SDL.h>
 #include <cstdlib>
@@ -104,6 +105,8 @@ int main() {
         runGui(callbacks);
         require(frame >= 9 && circuit.tick() == 37, "GUI scenario did not complete");
         require(SDL_WasInit(0) == 0, "standalone GUI retained the SDL runtime");
+        zoomInteractions();
+        require(SDL_WasInit(0) == 0, "zoom GUI retained the SDL runtime");
         GraphCallbacks shortRun = real;
         shortRun.captureGraph = [&] {
             require(SDL_SetHint("NTS_GUI_MEMORY_MARKER", "allocated") == SDL_TRUE,

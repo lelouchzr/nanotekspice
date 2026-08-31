@@ -67,6 +67,9 @@ if(NTS_BONUS)
         bonus/graphics/Export.cpp
         bonus/graphics/Glyphs.cpp
         bonus/graphics/Gui.cpp
+        bonus/graphics/GuiDrawing.cpp
+        bonus/graphics/GuiInput.cpp
+        bonus/graphics/Viewport.cpp
     )
     list(APPEND core_sources ${bonus_sources})
 endif()
@@ -131,7 +134,7 @@ if(BUILD_TESTING)
     if(NTS_BONUS AND NTS_BUILD_GRAPHICS AND NOT APPLE)
         find_program(XVFB_RUN_EXECUTABLE xvfb-run)
         if(XVFB_RUN_EXECUTABLE)
-            add_executable(test_gui_interactions bonus/tests/gui/Interactions.cpp)
+            add_executable(test_gui_interactions bonus/tests/gui/Interactions.cpp bonus/tests/gui/Zoom.cpp)
             target_link_libraries(test_gui_interactions PRIVATE nts_core)
             add_test(NAME gui_interactions COMMAND ${XVFB_RUN_EXECUTABLE} -a $<TARGET_FILE:test_gui_interactions>)
             set_tests_properties(gui_interactions PROPERTIES TIMEOUT 30)

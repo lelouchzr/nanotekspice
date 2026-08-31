@@ -33,3 +33,5 @@ ctest --test-dir build -R '^memory_' --output-on-failure
 Memcheck disables default suppressions. Core, CPU and CLI checks reject all remaining allocations. The GUI check reports third-party reachable caches while rejecting invalid accesses and all definite, indirect or possible lost blocks.
 
 Builds use strict warnings as errors and compile headers independently. `source_quality` checks formatting when clang-format is installed. Generated logs and memory reports stay in ignored build directories; archived machine reports are excluded from the published source.
+
+The reference-file manifest stores SHA-256 digests and relative paths. Verify the supplied subject, datasheets and original circuits with `shasum -a 256 -c doc/PROVENANCE.sha256`.
