@@ -13,7 +13,14 @@ void Circuit::add(const std::string &type, const std::string &name) {
     auto value = createComponent(type);
     if (!value)
         throw Error("unknown component type '" + type + "'");
-    nodes_.emplace(name, Node{type, std::move(value)});
+    const auto position = nodes_.emplace(name, Node{type, std::move(value)}).first;
+    try {
+        if (position->second.component->hasAsynchronousState())
+            asynchronous_.push_back(position->second.component.get());
+    } catch (...) {
+        nodes_.erase(position);
+        throw;
+    }
 }
 
 IComponent &Circuit::component(const std::string &name) const {
@@ -54,6 +61,7 @@ void Circuit::simulate() {
         (void)name;
         node.component->beginTick(next);
     }
+    settleAsynchronous();
     for (const auto &[name, node] : nodes_) {
         (void)name;
         node.component->prepare(next);
@@ -66,7 +74,23 @@ void Circuit::simulate() {
         (void)name;
         node.component->endTick(next);
     }
+    settleAsynchronous();
     tick_ = next;
+}
+
+void Circuit::settleAsynchronous() {
+    // A register output may assert its own reset through combinational feedback.
+    // Settle that state before sampling and after committing, without clocking again.
+    for (std::size_t pass = 0; pass < 1024; ++pass) {
+        bool changed = false;
+        for (auto *component : asynchronous_) {
+            if (component->settle())
+                changed = true;
+        }
+        if (!changed)
+            return;
+    }
+    throw Error("asynchronous circuit did not settle within 1024 passes");
 }
 
 std::size_t Circuit::tick() const noexcept {

@@ -21,6 +21,9 @@ class IComponent {
     virtual void beginTick(std::size_t tick);
     virtual void prepare(std::size_t tick);
     virtual void endTick(std::size_t tick);
+    // Resolve asynchronous state without advancing a clock; report state changes only.
+    [[nodiscard]] virtual bool hasAsynchronousState() const noexcept;
+    [[nodiscard]] virtual bool settle();
     [[nodiscard]] virtual Drive drive(std::size_t pin);
     [[nodiscard]] virtual std::size_t pinCount() const noexcept = 0;
     [[nodiscard]] virtual PinDirection pinDirection(std::size_t pin) const = 0;

@@ -33,6 +33,14 @@ The circuit must complete each pass before starting the next. Repeated simulatio
 the same tick is idempotent. Standalone `simulate(t)` supplies the missing phases for
 that component only; it does not advance linked components automatically.
 
+After source assignments and after the commit/cleanup passes, the circuit settles
+registered asynchronous state to a fixed point. `hasAsynchronousState()` opts a
+component in; `settle()` reports actual state changes and invalidates its caches.
+It must not advance clocks or the circuit tick. The 4040 uses this phase for reset
+feedback, including the supplied modulo-16 counter. A 1,024-pass convergence limit
+rejects unstable asynchronous networks. Circuits without these components skip the
+settling work.
+
 `setInput` only records a pending assignment. `currentInput` reports committed state.
 A clock assigned 0 remains U before tick 1, becomes 0 at tick 1, then becomes 1 at tick 2.
 

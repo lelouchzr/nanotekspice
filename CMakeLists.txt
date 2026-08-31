@@ -110,6 +110,12 @@ if(BUILD_TESTING)
             $<TARGET_FILE:nanotekspice> "${PROJECT_SOURCE_DIR}" $<BOOL:${NTS_BONUS}>)
         set_tests_properties(examples PROPERTIES TIMEOUT 90)
     endif()
+    if(EXISTS "${PROJECT_SOURCE_DIR}/tests/subject/main.py")
+        add_test(NAME subject_circuits COMMAND ${Python3_EXECUTABLE}
+            "${PROJECT_SOURCE_DIR}/tests/subject/main.py" $<TARGET_FILE:nanotekspice>
+            "${PROJECT_SOURCE_DIR}")
+        set_tests_properties(subject_circuits PROPERTIES TIMEOUT 120)
+    endif()
     if(NTS_BONUS AND EXISTS "${PROJECT_SOURCE_DIR}/bonus/tests/Main.cpp")
         file(GLOB bonus_test_sources CONFIGURE_DEPENDS "bonus/tests/*.cpp")
         add_executable(test_bonus ${bonus_test_sources})
@@ -139,6 +145,11 @@ if(BUILD_TESTING)
     if(NOT NTS_SANITIZERS)
         find_program(VALGRIND_EXECUTABLE valgrind)
         if(VALGRIND_EXECUTABLE)
+            add_test(NAME memory_subject_circuits COMMAND ${Python3_EXECUTABLE}
+                "${PROJECT_SOURCE_DIR}/tests/subject/main.py" $<TARGET_FILE:nanotekspice>
+                "${PROJECT_SOURCE_DIR}" --valgrind "${VALGRIND_EXECUTABLE}"
+                --log-directory "${CMAKE_BINARY_DIR}/memcheck/subject")
+            set_tests_properties(memory_subject_circuits PROPERTIES TIMEOUT 300)
             foreach(suite basic advanced parser)
                 add_test(NAME memory_${suite} COMMAND ${Python3_EXECUTABLE}
                     "${PROJECT_SOURCE_DIR}/tools/memory_check.py" --valgrind "${VALGRIND_EXECUTABLE}"

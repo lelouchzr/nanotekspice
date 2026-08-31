@@ -9,6 +9,14 @@ void IComponent::prepare(std::size_t) {}
 
 void IComponent::endTick(std::size_t) {}
 
+bool IComponent::hasAsynchronousState() const noexcept {
+    return false;
+}
+
+bool IComponent::settle() {
+    return false;
+}
+
 Drive IComponent::drive(std::size_t pin) {
     return toDrive(compute(pin));
 }

@@ -6,6 +6,8 @@ namespace nts {
 class Counter4040 final : public Component {
   public:
     Counter4040();
+    [[nodiscard]] bool hasAsynchronousState() const noexcept override;
+    [[nodiscard]] bool settle() override;
 
   protected:
     Drive evaluate(std::size_t pin) override;

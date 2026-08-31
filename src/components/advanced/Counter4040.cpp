@@ -29,18 +29,34 @@ Counter4040::Counter4040() : Component("4040", 16) {
 }
 
 Drive Counter4040::evaluate(std::size_t pin) {
-    const auto reset = read(11);
-    if (reset == True)
-        return Drive::Low;
     constexpr std::array<std::size_t, 12> outputs{9, 7, 6, 5, 3, 2, 4, 13, 12, 14, 15, 1};
     for (std::size_t bit = 0; bit < outputs.size(); ++bit)
         if (outputs[bit] == pin) {
             const auto &mask = bitMasks()[bit];
             const bool high = (states_ & mask).any();
-            const bool low = (states_ & ~mask).any() || reset == Undefined;
+            const bool low = (states_ & ~mask).any();
             return high && low ? Drive::Unknown : high ? Drive::High : Drive::Low;
         }
     return Drive::HighImpedance;
+}
+
+bool Counter4040::hasAsynchronousState() const noexcept {
+    return true;
+}
+
+bool Counter4040::settle() {
+    const auto reset = read(11);
+    if (reset == False)
+        return false;
+    auto next = states_;
+    if (reset == True)
+        next.reset();
+    next.set(0);
+    if (next == states_)
+        return false;
+    states_ = next;
+    invalidate();
+    return true;
 }
 
 void Counter4040::onPrepare(std::size_t) {

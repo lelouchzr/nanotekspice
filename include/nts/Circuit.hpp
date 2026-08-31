@@ -39,7 +39,9 @@ class Circuit {
     [[nodiscard]] const std::map<std::string, LayoutPosition, std::less<>> &layout() const noexcept;
 
   private:
+    void settleAsynchronous();
     std::map<std::string, Node, std::less<>> nodes_;
+    std::vector<IComponent *> asynchronous_;
     std::vector<Link> links_;
     std::map<std::string, LayoutPosition, std::less<>> layout_;
     std::size_t tick_ = 0;
