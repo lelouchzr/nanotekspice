@@ -1,0 +1,50 @@
+name: NanoTekSpice
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-15]
+        bonus: ['ON', 'OFF']
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y cmake pkg-config libsdl2-dev xvfb xauth valgrind clang-format-18
+      - name: Install macOS dependencies
+        if: runner.os == 'macOS'
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: '1'
+          HOMEBREW_NO_INSTALL_CLEANUP: '1'
+        run: brew install cmake pkg-config sdl2 clang-format
+      - name: Configure Linux
+        if: runner.os == 'Linux'
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DNTS_STRICT=ON -DNTS_BONUS=${{ matrix.bonus }} -DCLANG_FORMAT_EXECUTABLE=/usr/bin/clang-format-18
+      - name: Configure macOS
+        if: runner.os == 'macOS'
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DNTS_STRICT=ON -DNTS_BONUS=${{ matrix.bonus }}
+      - run: cmake --build build --parallel 4
+      - run: ctest --test-dir build --output-on-failure
+  sanitizers:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - run: sudo apt-get update && sudo apt-get install -y clang-format-18
+      - run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DNTS_STRICT=ON -DNTS_SANITIZERS=ON -DNTS_BUILD_GRAPHICS=OFF -DCLANG_FORMAT_EXECUTABLE=/usr/bin/clang-format-18
+      - run: cmake --build build --parallel 4
+      - run: ctest --test-dir build --output-on-failure
+        env:
+          ASAN_OPTIONS: detect_leaks=1:halt_on_error=1
+          UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1

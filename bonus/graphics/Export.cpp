@@ -110,11 +110,11 @@ std::string graphSvg(const GraphModel &input) {
             detail << '\n' << node.display->text;
         svg << "<g class=\"node\" data-name=\"" << escapeXml(node.name) << "\" data-detail=\""
             << escapeXml(detail.str()) << "\" transform=\"translate(" << node.x << ',' << node.y
-            << ")\">"
-            << "<rect width=\"240\" height=\"" << nodeHeight(node)
-            << "\" rx=\"9\" fill=\"#142131\" stroke=\"#344b61\"/>"
-            << "<text x=\"14\" y=\"24\">" << escapeXml(node.name) << "</text>"
-            << "<text x=\"14\" y=\"46\" style=\"fill:#78d5ad\">" << escapeXml(node.type)
+            << ")\">";
+        svg << "<rect width=\"240\" height=\"" << nodeHeight(node)
+            << "\" rx=\"9\" fill=\"#142131\" stroke=\"#344b61\"/>";
+        svg << "<text x=\"14\" y=\"24\">" << escapeXml(node.name) << "</text>";
+        svg << "<text x=\"14\" y=\"46\" style=\"fill:#78d5ad\">" << escapeXml(node.type)
             << "</text>";
         std::string values;
         for (const auto &pin : node.pins)

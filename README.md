@@ -52,7 +52,7 @@ Assignments are deferred. An uninitialized input is U. Errors: stderr and **84**
 
 ## Circuit examples
 
-The [examples/ catalog](examples/README.md) contains runnable `.nts` circuits for gates, CMOS chips, counters and memories. [Bonus examples](bonus/examples/) include the computer, keyboard, matrix and seven-segment display. All are included in the repository and release archives.
+The [examples/ catalog](examples/README.md) contains runnable `.nts` circuits for gates, CMOS chips, counters and memories. [Bonus examples](bonus/examples/) include the computer, keyboard, matrix and seven-segment display. All are included in the repository.
 
 ## Minimal circuit
 
@@ -118,7 +118,6 @@ Combinational values are evaluated on demand with cycle guards. The circuit owns
 | Subject coverage | [Requirements](doc/REQUIREMENTS.md) |
 | Build, tests and memory checks | [Testing](doc/testing.md) |
 | Optimization | [Profiling](doc/performance.md) |
-| Binary archives | [Release guide](doc/releasing.md) |
 | API | [IComponent contract](include/nts/CONTRACT.md) |
 
 Types live in `include/nts/`, methods in `src/`, and extensions in `bonus/`. Strict compilation with `-Werror`.

@@ -3,3 +3,6 @@
 *.gz binary
 # Preserve the supplied reference circuits byte-for-byte, including their original spacing.
 tests/fixtures/original/** -text -whitespace
+examples/nts_single/** -text -whitespace
+examples/nts_advanced/** -text -whitespace
+examples/subject_sample/** -text -whitespace
