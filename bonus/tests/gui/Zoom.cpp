@@ -9,12 +9,22 @@
 
 namespace {
 
+nts::bonus::Gui *activeGui = nullptr;
+
 void require(bool condition, const char *message) {
     if (!condition)
         throw std::runtime_error(message);
 }
 
 void push(SDL_Event event) {
+#ifdef __APPLE__
+    // SDL2-compat drops precise wheel fields when converting synthetic PushEvent
+    // payloads to SDL3. Feed those payloads unchanged to the native handler.
+    if (event.type == SDL_MOUSEWHEEL && activeGui) {
+        activeGui->handleEvent(event);
+        return;
+    }
+#endif
     require(SDL_PushEvent(&event) == 1, "cannot queue zoom interaction");
 }
 
@@ -214,7 +224,9 @@ void zoomInteractions() {
     {
         Gui gui(callbacks);
         window = &gui;
+        activeGui = &gui;
         gui.run();
+        activeGui = nullptr;
     }
     require(frame >= 20 && circuit.tick() == 3, "zoom scenario did not complete");
 }

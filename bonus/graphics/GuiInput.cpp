@@ -100,45 +100,49 @@ void Gui::click(int x, int y) {
 
 void Gui::poll() {
     SDL_Event event;
-    while (SDL_PollEvent(&event)) {
-        if (event.type == SDL_QUIT)
-            running_ = false;
-        if (event.type == SDL_WINDOWEVENT) {
-            if (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
-                width_ = std::max(640, event.window.data1);
-                height_ = std::max(480, event.window.data2);
-                viewport_.resize(width_ - 324, height_ - 84);
-            } else if (event.window.event == SDL_WINDOWEVENT_FOCUS_LOST)
-                dragging_ = false;
-        }
-        if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT)
-            click(event.button.x, event.button.y);
-        if (event.type == SDL_MOUSEBUTTONUP)
+    while (SDL_PollEvent(&event))
+        handleEvent(event);
+}
+
+void Gui::handleEvent(const SDL_Event &event) {
+    if (event.type == SDL_QUIT)
+        running_ = false;
+    if (event.type == SDL_WINDOWEVENT) {
+        if (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
+            SDL_GetWindowSize(window_, &width_, &height_);
+            width_ = std::max(640, width_);
+            height_ = std::max(480, height_);
+            viewport_.resize(width_ - 324, height_ - 84);
+        } else if (event.window.event == SDL_WINDOWEVENT_FOCUS_LOST)
             dragging_ = false;
-        if (event.type == SDL_MOUSEMOTION && dragging_) {
-            viewport_.pan(event.motion.x - lastX_, event.motion.y - lastY_);
-            lastX_ = event.motion.x;
-            lastY_ = event.motion.y;
-        }
-        if (event.type == SDL_MOUSEWHEEL) {
-            int x = 0, y = 0;
-            SDL_GetMouseState(&x, &y);
-#if SDL_VERSION_ATLEAST(2, 26, 0)
-            x = event.wheel.mouseX;
-            y = event.wheel.mouseY;
-#endif
-            double steps = event.wheel.y;
-#if SDL_VERSION_ATLEAST(2, 0, 18)
-            if (event.wheel.preciseY != 0)
-                steps = event.wheel.preciseY;
-#endif
-            if (event.wheel.direction == SDL_MOUSEWHEEL_FLIPPED)
-                steps = -steps;
-            wheel(steps, x, y);
-        }
-        if (event.type == SDL_KEYDOWN)
-            key(event.key.keysym.sym, event.key.keysym.mod);
     }
+    if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT)
+        click(event.button.x, event.button.y);
+    if (event.type == SDL_MOUSEBUTTONUP)
+        dragging_ = false;
+    if (event.type == SDL_MOUSEMOTION && dragging_) {
+        viewport_.pan(event.motion.x - lastX_, event.motion.y - lastY_);
+        lastX_ = event.motion.x;
+        lastY_ = event.motion.y;
+    }
+    if (event.type == SDL_MOUSEWHEEL) {
+        int x = 0, y = 0;
+        SDL_GetMouseState(&x, &y);
+#if SDL_VERSION_ATLEAST(2, 26, 0)
+        x = event.wheel.mouseX;
+        y = event.wheel.mouseY;
+#endif
+        double steps = event.wheel.y;
+#if SDL_VERSION_ATLEAST(2, 0, 18)
+        // A zero precise delta is meaningful for horizontal-only gestures.
+        steps = event.wheel.preciseY;
+#endif
+        if (event.wheel.direction == SDL_MOUSEWHEEL_FLIPPED)
+            steps = -steps;
+        wheel(steps, x, y);
+    }
+    if (event.type == SDL_KEYDOWN)
+        key(event.key.keysym.sym, event.key.keysym.mod);
 }
 
 } // namespace nts::bonus

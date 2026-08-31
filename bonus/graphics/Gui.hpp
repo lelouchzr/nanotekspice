@@ -7,6 +7,7 @@
 
 struct SDL_Window;
 struct SDL_Renderer;
+union SDL_Event;
 
 namespace nts::bonus {
 
@@ -17,6 +18,7 @@ class Gui {
     Gui(const Gui &) = delete;
     Gui &operator=(const Gui &) = delete;
     void run();
+    void handleEvent(const SDL_Event &event);
     [[nodiscard]] const Viewport &view() const noexcept;
 
   private:
